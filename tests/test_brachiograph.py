@@ -6,60 +6,62 @@ import brachiograph
 
 @pytest.fixture
 def br():
-	with mock.patch("pigpio.pi"):
-		with mock.patch("brachiograph.sleep"):
-			br = brachiograph.BrachioGraph(9, 9)
-		yield br
+    with mock.patch("pigpio.pi"):
+        with mock.patch("brachiograph.sleep"):
+            br = brachiograph.BrachioGraph(9, 9)
+        yield br
 
 
 def test_plot_file():
-	pass
+    pass
 
 def test_plot_lines():
-	pass
+    pass
 
 def test_draw(br):
-	with mock.patch("brachiograph.sleep"):
-		br.draw(3,4)
+    with mock.patch("brachiograph.sleep"):
+        br.draw(3,4)
 
-def test_draw_test_pattern():
-	pass
+def test_draw_test_pattern(br):
+    with mock.patch("brachiograph.sleep"):
+        br.test_pattern()
 
-def test_box():
-	pass
+def test_box(br):
+    with mock.patch("brachiograph.sleep"):
+        br.box()
 
 def test_centre():
-	pass
+    pass
 
 def test_xy():
-	pass
+    pass
 
 def test_set_angles():
-	pass
+    pass
 
 
 def test_naive_angles_to_pulse_width():
-	pass
+    pass
 
 def test_angles_to_pulse_width():
-	pass
+    pass
 
 def test_set_pulse_widths():
-	pass
+    pass
 
 def test_get_pulse_widths():
-	pass
+    pass
 
 def test_park():
-	pass
+    pass
 
 def test_quiet():
-	pass
+    pass
 
 def test_xy_to_angles():
-	pass
+    pass
 
 def test_angles_to_xy():
-	pass
+    pass
 
 # no tests for drive / drive_xy, which are interactive
