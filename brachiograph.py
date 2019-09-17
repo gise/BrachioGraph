@@ -64,16 +64,16 @@ class BrachioGraphBase:
         self.rpi = pigpio.pi()
 
         # the pulse frequency should be no higher than 100Hz - higher values could (supposedly) damage the servos
-        self.rpi.set_PWM_frequency(14, 50)
-        self.rpi.set_PWM_frequency(15, 50)
+        self.rpi.set_PWM_frequency(SHOULDER_GPIO, 50)
+        self.rpi.set_PWM_frequency(ELBOW_GPIO, 50)
 
         # create the pen object, and make sure the pen is up
         self.pen = Pen(ag=self, pw_up=pw_up, pw_down=pw_down)
 
         # Initialise the pantograph with the motors in the centre of their travel
-        self.rpi.set_servo_pulsewidth(14, self.angles_to_pw_1(-90))
+        self.rpi.set_servo_pulsewidth(SHOULDER_GPIO, self.angles_to_pw_1(-90))
         sleep(0.3)
-        self.rpi.set_servo_pulsewidth(15, self.angles_to_pw_2(90))
+        self.rpi.set_servo_pulsewidth(ELBOW_GPIO, self.angles_to_pw_2(90))
         sleep(0.3)
 
         # Now the plotter is in a safe physical state.
@@ -346,11 +346,13 @@ class BrachioGraphBase:
         else:
             self.pen.up()
 
-        (angle_1, angle_2) = self.xy_to_angles(x, y)
-        (pulse_width_1, pulse_width_2) = self.angles_to_pulse_widths(angle_1, angle_2)
+        (angle_shoulder, angle_elbow) = self.xy_to_angles(x, y)
+        (pulse_width_shoulder, pulse_width_elbow) = self.angles_to_pulse_widths(
+            angle_shoulder, angle_elbow
+        )
 
         # if they are the same, we don't need to move anything
-        if (pulse_width_1, pulse_width_2) == self.get_pulse_widths():
+        if (pulse_width_shoulder, pulse_width_elbow) == self.get_pulse_widths():
 
             # ensure the pantograph knows its x/y positions
             self.current_x = x
@@ -385,28 +387,30 @@ class BrachioGraphBase:
             self.current_x = self.current_x + length_of_step_x
             self.current_y = self.current_y + length_of_step_y
 
-            angle_1, angle_2 = self.xy_to_angles(self.current_x, self.current_y)
+            angle_shoulder, angle_elbow = self.xy_to_angles(
+                self.current_x, self.current_y
+            )
 
-            self.set_angles(angle_1, angle_2)
+            self.set_angles(angle_shoulder, angle_elbow)
 
             if step + 1 < no_of_steps:
                 sleep(length * wait / no_of_steps)
 
         sleep(length * wait / 10)
 
-    def set_angles(self, angle_1=0, angle_2=0):
+    def set_angles(self, angle_shoulder=0, angle_elbow=0):
         """
         Moves the two servo motors
 
-        angle_1: angle of arm (shoulder)
-        angle_2: angle of arm (elbow)
+        angle_shoulder: angle of arm (shoulder)
+        angle_elbow: angle of arm (elbow)
         """
-        pw_1, pw_2 = self.angles_to_pulse_widths(angle_1, angle_2)
+        pw_shoulder, pw_elbow = self.angles_to_pulse_widths(angle_shoulder, angle_elbow)
 
-        self.set_pulse_widths(pw_1, pw_2)
+        self.set_pulse_widths(pw_shoulder, pw_elbow)
 
         # We record the angles, so that we know where the arms are for future reference.
-        self.angle_1, self.angle_2 = angle_1, angle_2
+        self.angle_1, self.angle_2 = angle_shoulder, angle_elbow
 
     #  ----------------- hardware-related methods -----------------
 
@@ -426,43 +430,43 @@ class BrachioGraphBase:
         """
         return (angle - 90) * 10 + self.servo_2_zero
 
-    def angles_to_pulse_widths(self, angle_1, angle_2):
+    def angles_to_pulse_widths(self, angle_shoulder, angle_elbow):
         """
         Given a pair of angles, returns the appropriate pulse widths.
 
-        angle_1: angle of arm (shoulder)
-        angle_2: angle of arm (elbow)
+        angle_shoulder: angle of arm (shoulder)
+        angle_elbow: angle of arm (elbow)
         """
 
         # at present we assume only one method of calculating, using the angles_to_pw_1 and angles_to_pw_2
         # functions created using numpy
 
-        pulse_width_1, pulse_width_2 = (
-            self.angles_to_pw_1(angle_1),
-            self.angles_to_pw_2(angle_2),
+        pulse_width_shoulder, pulse_width_elbow = (
+            self.angles_to_pw_1(angle_shoulder),
+            self.angles_to_pw_2(angle_elbow),
         )
 
-        return (pulse_width_1, pulse_width_2)
+        return (pulse_width_shoulder, pulse_width_elbow)
 
-    def set_pulse_widths(self, pw_1, pw_2):
+    def set_pulse_widths(self, pw_shoulder, pw_elbow):
         """
         Set pulse widths
 
-        pw_1: pulse width for arm (shoulder)
-        pw_2: pulse width for arm (elbow)
+        pw_shoulder: pulse width for arm (shoulder)
+        pw_elbow: pulse width for arm (elbow)
         """
-        self.rpi.set_servo_pulsewidth(14, pw_1)
-        self.rpi.set_servo_pulsewidth(15, pw_2)
+        self.rpi.set_servo_pulsewidth(SHOULDER_GPIO, pw_shoulder)
+        self.rpi.set_servo_pulsewidth(ELBOW_GPIO, pw_elbow)
 
     def get_pulse_widths(self):
         """
         Get current pulse widths
         """
 
-        actual_pulse_width_1 = self.rpi.get_servo_pulsewidth(14)
-        actual_pulse_width_2 = self.rpi.get_servo_pulsewidth(15)
+        actual_pulse_width_shoulder = self.rpi.get_servo_pulsewidth(SHOULDER_GPIO)
+        actual_pulse_width_elbow = self.rpi.get_servo_pulsewidth(ELBOW_GPIO)
 
-        return (actual_pulse_width_1, actual_pulse_width_2)
+        return (actual_pulse_width_shoulder, actual_pulse_width_elbow)
 
     def park(self):
         """
@@ -471,7 +475,7 @@ class BrachioGraphBase:
         self.pen.up()
         self.xy(-self.INNER_ARM, self.OUTER_ARM)
 
-    def quiet(self, servos=[14, 15, 18]):
+    def quiet(self, servos=[SHOULDER_GPIO, ELBOW_GPIO, PEN_GPIO]):
         """
         Stop sending pulses to the servos
 
@@ -618,7 +622,9 @@ class BrachioGraph(BrachioGraphBase):
 
 
 class Pen:
-    def __init__(self, ag, pw_up=1500, pw_down=1100, pin=18, transition_time=0.25):
+    def __init__(
+        self, ag, pw_up=1500, pw_down=1100, pin=PEN_GPIO, transition_time=0.25
+    ):
 
         self.ag = ag
         self.pin = pin
