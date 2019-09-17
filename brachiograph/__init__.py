@@ -21,10 +21,10 @@ class BrachioGraphBase:
         inner_arm,  # the lengths of the arms
         outer_arm,
         bounds=None,  # the maximum rectangular drawing area
-        servo_1_angle_pws=[],  # pulse-widths for various angles
-        servo_2_angle_pws=[],
-        servo_1_zero=1500,
-        servo_2_zero=1500,
+        servo_shoulder_angle_pws=[],  # pulse-widths for various angles
+        servo_elbow_angle_pws=[],
+        servo_shoulder_zero=1500,
+        servo_elbow_zero=1500,
         pw_up=1500,  # pulse-widths for pen up/down
         pw_down=1100,
     ):
@@ -40,25 +40,25 @@ class BrachioGraphBase:
         # numpy.polyfit(), to produce a function for each one. Otherwise, we will use a simple
         # approximation based on a centre of travel of 1500µS and 10µS per degree
 
-        if servo_1_angle_pws:
-            servo_1_array = numpy.array(servo_1_angle_pws)
-            self.angles_to_pw_1 = numpy.poly1d(
-                numpy.polyfit(servo_1_array[:, 0], servo_1_array[:, 1], 3)
+        if servo_shoulder_angle_pws:
+            servo_shoulder_array = numpy.array(servo_shoulder_angle_pws)
+            self.angles_to_pw_shoulder = numpy.poly1d(
+                numpy.polyfit(servo_shoulder_array[:, 0], servo_shoulder_array[:, 1], 3)
             )
 
         else:
-            self.angles_to_pw_1 = self.naive_angles_to_pulse_widths_1
-            self.servo_1_zero = servo_1_zero
+            self.angles_to_pw_shoulder = self.naive_angles_to_pulse_widths_shoulder
+            self.servo_shoulder_zero = servo_shoulder_zero
 
-        if servo_2_angle_pws:
-            servo_2_array = numpy.array(servo_2_angle_pws)
-            self.angles_to_pw_2 = numpy.poly1d(
-                numpy.polyfit(servo_2_array[:, 0], servo_2_array[:, 1], 3)
+        if servo_elbow_angle_pws:
+            servo_elbow_array = numpy.array(servo_elbow_angle_pws)
+            self.angles_to_pw_elbow = numpy.poly1d(
+                numpy.polyfit(servo_elbow_array[:, 0], servo_elbow_array[:, 1], 3)
             )
 
         else:
-            self.angles_to_pw_2 = self.naive_angles_to_pulse_widths_2
-            self.servo_2_zero = servo_2_zero
+            self.angles_to_pw_elbow = self.naive_angles_to_pulse_widths_elbow
+            self.servo_elbow_zero = servo_elbow_zero
 
         # instantiate this Raspberry Pi as a pigpio.pi() instance
         self.rpi = pigpio.pi()
@@ -71,9 +71,9 @@ class BrachioGraphBase:
         self.pen = Pen(ag=self, pw_up=pw_up, pw_down=pw_down)
 
         # Initialise the pantograph with the motors in the centre of their travel
-        self.rpi.set_servo_pulsewidth(SHOULDER_GPIO, self.angles_to_pw_1(-90))
+        self.rpi.set_servo_pulsewidth(SHOULDER_GPIO, self.angles_to_pw_shoulder(-90))
         sleep(0.3)
-        self.rpi.set_servo_pulsewidth(ELBOW_GPIO, self.angles_to_pw_2(90))
+        self.rpi.set_servo_pulsewidth(ELBOW_GPIO, self.angles_to_pw_elbow(90))
         sleep(0.3)
 
         # Now the plotter is in a safe physical state.
@@ -412,21 +412,21 @@ class BrachioGraphBase:
 
     #  ----------------- hardware-related methods -----------------
 
-    def naive_angles_to_pulse_widths_1(self, angle):
+    def naive_angles_to_pulse_widths_shoulder(self, angle):
         """
         Approximate pulse width with linear function
 
         angle: angle of arm (shoulder)
         """
-        return (angle + 90) * 10 + self.servo_1_zero
+        return (angle + 90) * 10 + self.servo_shoulder_zero
 
-    def naive_angles_to_pulse_widths_2(self, angle):
+    def naive_angles_to_pulse_widths_elbow(self, angle):
         """
         Approximate pulse width with linear function
 
         angle: angle of arm (elbow)
         """
-        return (angle - 90) * 10 + self.servo_2_zero
+        return (angle - 90) * 10 + self.servo_elbow_zero
 
     def angles_to_pulse_widths(self, angle_shoulder, angle_elbow):
         """
@@ -436,12 +436,12 @@ class BrachioGraphBase:
         angle_elbow: angle of arm (elbow)
         """
 
-        # at present we assume only one method of calculating, using the angles_to_pw_1 and angles_to_pw_2
+        # at present we assume only one method of calculating, using the angles_to_pw_shoulder and angles_to_pw_elbow
         # functions created using numpy
 
         pulse_width_shoulder, pulse_width_elbow = (
-            self.angles_to_pw_1(angle_shoulder),
-            self.angles_to_pw_2(angle_elbow),
+            self.angles_to_pw_shoulder(angle_shoulder),
+            self.angles_to_pw_elbow(angle_elbow),
         )
 
         return (pulse_width_shoulder, pulse_width_elbow)
