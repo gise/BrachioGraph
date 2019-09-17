@@ -10,6 +10,11 @@ import pigpio
 import tqdm
 
 
+SHOULDER_GPIO = 14
+ELBOW_GPIO = 15
+PEN_GPIO = 18
+
+
 class BrachioGraphBase:
     def __init__(
         self,
@@ -178,7 +183,6 @@ class BrachioGraphBase:
         # Get a 'divider' value for each range - the value by which we must divide all x and y so that they will
         # fit safely inside the drawing range of the plotter.
 
-        #
         # If both image and box are in portrait orientation, or both in landscape, we don't need to rotate the plot.
 
         if (x_range >= y_range and box_x_range >= box_y_range) or (
