@@ -1,6 +1,16 @@
 from unittest import mock
 
+import pytest
+
 import brachiograph
+
+@pytest.fixture
+def br():
+	with mock.patch("pigpio.pi"):
+		with mock.patch("brachiograph.sleep"):
+			br = brachiograph.BrachioGraph(9, 9)
+		yield br
+
 
 def test_plot_file():
 	pass
@@ -8,10 +18,9 @@ def test_plot_file():
 def test_plot_lines():
 	pass
 
-def test_draw():
-	with mock.patch("pigpio.pi"), mock.patch("brachiograph.sleep"):
-		b = brachiograph.BrachioGraph(9, 9)
-		b.draw(3,4)
+def test_draw(br):
+	with mock.patch("brachiograph.sleep"):
+		br.draw(3,4)
 
 def test_draw_test_pattern():
 	pass
