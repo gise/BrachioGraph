@@ -94,7 +94,7 @@ class BrachioGraph:
         bounds = bounds or self.bounds
 
         if not bounds:
-            return "File plotting is only possible when BrachioGraph.bounds is set."
+            raise TypeError("Missing bounds parameter (or missing bounds configuration")
 
         with open(filename, "r") as line_file:
             lines = json.load(line_file)
@@ -107,7 +107,7 @@ class BrachioGraph:
         bounds = bounds or self.bounds
 
         if not bounds:
-            return "Line plotting is only possible when BrachioGraph.bounds is set."
+            raise TypeError("Missing bounds parameter (or missing bounds configuration")
 
         # lines is a tuple itself containing a number of tuples, each of which contains a number of 2-tuples
         #
@@ -224,7 +224,7 @@ class BrachioGraph:
         bounds = bounds or self.bounds
 
         if not bounds:
-            return "Plotting a test pattern is only possible when BrachioGraph.bounds is set."
+            raise TypeError("Missing bounds parameter (or missing bounds configuration")
 
         for r in tqdm.tqdm(tqdm.trange(repeat, desc='Iteration'), leave=False):
 
@@ -245,7 +245,7 @@ class BrachioGraph:
         bounds = bounds or self.bounds
 
         if not bounds:
-            return "Box drawing is only possible when BrachioGraph.bounds is set."
+            raise TypeError("Missing bounds parameter (or missing bounds configuration")
 
         self.xy(bounds[0], bounds[1], wait, interpolate)
 
@@ -276,8 +276,7 @@ class BrachioGraph:
     def centre(self):
 
         if not bounds:
-            return "Moving to the centre is only possible when BrachioGraph.bounds is set."
-
+            raise TypeError("Missing bounds parameter (or missing bounds configuration")
 
         self.pen.up()
         self.xy(self.bounds[2]/2, self.bounds[3]/2)
