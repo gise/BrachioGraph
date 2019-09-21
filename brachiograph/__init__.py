@@ -64,10 +64,12 @@ class Servo:
 
 class BrachioGraphBase:
 
-    # bounds: ...
-    # pen: ...
-    # shoulder: ...
-    # elbow: ...
+    """
+    This is a base class. Sub-classes should define:
+        - bounds: the default values for plotting methods
+        - pen: an instance of Pen
+        - shoulder, elbow: two instances of Servo
+    """
 
     # ----------------- drawing methods -----------------
 
@@ -527,14 +529,12 @@ class BrachioGraph(BrachioGraphBase):
         self.bounds = bounds
 
         # instantiate this Raspberry Pi as a pigpio.pi() instance
-        self.rpi = pigpio.pi()
+        rpi = pigpio.pi()
 
         self.shoulder = Servo(
-            self.rpi, SHOULDER_GPIO, servo_shoulder_angle_pws, servo_shoulder_zero
+            rpi, SHOULDER_GPIO, servo_shoulder_angle_pws, servo_shoulder_zero
         )
-        self.elbow = Servo(
-            self.rpi, ELBOW_GPIO, servo_elbow_angle_pws, servo_elbow_zero
-        )
+        self.elbow = Servo(rpi, ELBOW_GPIO, servo_elbow_angle_pws, servo_elbow_zero)
 
         # create the pen object, and make sure the pen is up
         self.pen = Pen(ag=self, pw_up=pw_up, pw_down=pw_down)
@@ -556,10 +556,8 @@ class BrachioGraph(BrachioGraphBase):
         servos: list of gpio pin numbers attached to the servos
         """
 
-        for servo in (self.shoulder, self.elbow):
+        for servo in (self.shoulder, self.elbow, self.pen):
             servo.quiet()
-
-        self.rpi.set_servo_pulsewidth(PEN_GPIO, 0)
 
 
 class Pen:
@@ -596,3 +594,7 @@ class Pen:
         """
         self.rpi.set_servo_pulsewidth(self.pin, self.pw_up)
         sleep(self.transition_time)
+
+    def quiet(self):
+        """Stop sending pulses to the servo"""
+        self.rpi.set_servo_pulsewidth(PEN_GPIO, 0)
