@@ -467,42 +467,7 @@ class BrachioGraphBase:
 
         return (x, y)
 
-    # ----------------- manual driving methods -----------------
-
-    def drive(self):
-        """
-        Adjust the pulse-widths using the keyboard
-        """
-
-        pw_1, pw_2 = self.get_pulse_widths()
-
-        self.set_pulse_widths(pw_1, pw_2)
-
-        while True:
-            key = readchar.readchar()
-
-            if key == "0":
-                return
-            elif key == "a":
-                pw_1 = pw_1 - 10
-            elif key == "s":
-                pw_1 = pw_1 + 10
-            elif key == "A":
-                pw_1 = pw_1 - 1
-            elif key == "S":
-                pw_1 = pw_1 + 1
-            elif key == "k":
-                pw_2 = pw_2 - 10
-            elif key == "l":
-                pw_2 = pw_2 + 10
-            elif key == "K":
-                pw_2 = pw_2 - 1
-            elif key == "L":
-                pw_2 = pw_2 + 1
-
-            print(pw_1, pw_2)
-
-            self.set_pulse_widths(pw_1, pw_2)
+    # ----------------- manual driving method -----------------
 
     def drive_xy(self):
         """
